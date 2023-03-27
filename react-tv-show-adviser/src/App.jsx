@@ -3,10 +3,15 @@ import s from "./style.module.css";
 import { TVShowAPI } from "./api/tv-show";
 import { useEffect, useState } from "react";
 import { BACKDROP_BASE_URL } from "./config";
-
+import { TVShowDetail } from "./components/TVShowDetail/TVShowDetail";
+import { Logo } from "./components/Logo/Logo";
+import logo from "./assets/images/logo.png";
+import { TVShowListItem } from "./components/TVShowListItem/TVShowListItem";
+import { TVShowList } from "./TVShowList/TVShowList";
 
 export function App() {
     const [currentTVShow, setCurrentTVShow] = useState();
+    const [recommandationList, setRecommandationList] = useState([]);
     async function fetchPopulars() {
         const populars = await TVShowAPI.fetchPopulars();
         if(populars.length > 0) {
@@ -14,11 +19,31 @@ export function App() {
         }
     }
 
+    async function fetchRecommandations(tvShowId) {
+        const recommandations = await TVShowAPI.fetchRecommandations(
+            tvShowId
+        );
+        if(recommandations.length > 0) {
+            setRecommandationList(recommandations.slice(0, 10));
+        }
+    }
+
     useEffect(()=>{
         fetchPopulars();
     }, [])
 
-    console.log("***", currentTVShow);
+    useEffect(()=>{
+        if(currentTVShow) {
+            fetchRecommandations(currentTVShow.id);
+        }
+    }, [currentTVShow])
+
+    console.log("***", recommandationList)
+
+    function setCurrentTvShowFromRecommandation(tvShow) {
+        alert(JSON.stringify(tvShow))
+    }
+
     return ( 
     <div className={s.main_container}
     style={{background: currentTVShow 
@@ -27,14 +52,19 @@ export function App() {
         <div className={s.header}>
             <div className="row">
                 <div className="col-4">
-                    <div>Logo</div>
-                    <div>Subtitile</div>
+                    <Logo image={logo} title="ZuWatch" subtitle="Find a show you may like"/>
                 </div>
                 <div className="col-md-12 col-lg-4"><input type="text"/></div>
             </div>
         </div>
-        <div className={s.tv_show_detail}>Details</div>
-        <div className={s.recommandations}>Recommandations</div>
+        <div className={s.tv_show_detail}>
+            {currentTVShow && <TVShowDetail tvShow={currentTVShow}/>}
+            </div>
+        <div className={s.recommandations}>
+                {recommandationList && recommandationList.length > 0 && 
+                (<TVShowList TVShowList={recommandationList}/>
+                )}           
+            </div>
     </div>
     );
 }
